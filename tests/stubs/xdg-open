@@ -1,0 +1,3 @@
+#!/bin/sh
+# Test stand-in for xdg-open: does nothing
+exit 0

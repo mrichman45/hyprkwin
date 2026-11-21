@@ -1,0 +1,44 @@
+name: Release
+
+# Push a tag like v1.2 and this builds HyprKWin-Setup.sh and attaches it to a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test
+        run: |
+          node --test tests/*.test.js
+          python3 -m unittest discover -s tests -p "test_*.py"
+
+      - name: Build HyprKWin-Setup.sh
+        run: sh tools/build-setup.sh
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/HyprKWin-Setup.sh
+          generate_release_notes: true
+          body: |
+            **Install:** download `HyprKWin-Setup.sh`, then double-click it (choose "Execute"), or run `sh HyprKWin-Setup.sh`.
+            Needs KDE Plasma 6 and python3. Run the same file again to update or uninstall.
+
+      - name: Keep the file (manual runs)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: HyprKWin-Setup
+          path: dist/HyprKWin-Setup.sh

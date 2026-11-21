@@ -1,0 +1,21 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Id": "hyprkwin",
+        "Name": "HyprKWin",
+        "Description": "Hyprland's tiling for Plasma: dwindle, master, scrolling and monocle layouts, special workspace, pseudotiling and Hyprland's options",
+        "Icon": "view-grid",
+        "Version": "1.1",
+        "License": "BSD-3-Clause",
+        "Authors": [
+            {
+                "Name": "HyprKWin contributors"
+            }
+        ],
+        "Website": "https://github.com/hyprwm/Hyprland",
+        "EnabledByDefault": false
+    },
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "X-Plasma-API": "declarativescript",
+    "X-Plasma-MainScript": "ui/main.qml"
+}

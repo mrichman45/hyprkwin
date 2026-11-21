@@ -1,0 +1,22 @@
+{
+    "KPackageStructure": "KWin/Effect",
+    "KPlugin": {
+        "Id": "hyprkwin_animations",
+        "Name": "HyprKWin Animations",
+        "Description": "Hyprland-style window animations: pop-in, slide or fade on open and close, and windows gliding when tiles move",
+        "Category": "Appearance",
+        "Icon": "preferences-system-windows-effect",
+        "Version": "1.1",
+        "License": "BSD-3-Clause",
+        "Authors": [
+            {
+                "Name": "HyprKWin contributors"
+            }
+        ],
+        "EnabledByDefault": false
+    },
+    "X-KDE-ConfigModule": "kcm_kwin4_genericscripted",
+    "X-KDE-Ordering": 60,
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js"
+}

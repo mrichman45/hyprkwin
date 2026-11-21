@@ -1,0 +1,10 @@
+#!/bin/sh
+# Test stand-in for kpackagetool6: copies a package folder to ~/.local/share/kwin/{scripts,effects}/<id>
+type=""; op=""; pkg=""
+for a in "$@"; do case "$a" in --type=*) type="${a#--type=}";; --install|--upgrade|--remove) op="$a";; *) pkg="$a";; esac; done
+case "$type" in KWin/Script) dir=scripts;; KWin/Effect) dir=effects;; esac
+base="${XDG_DATA_HOME:-$HOME/.local/share}/kwin/$dir"
+if [ "$op" = "--remove" ]; then rm -rf "$base/$pkg"; exit 0; fi
+id=$(python3 -c "import json;print(json.load(open('$pkg/metadata.json'))['KPlugin']['Id'])")
+if [ "$op" = "--install" ] && [ -d "$base/$id" ]; then echo "already installed" >&2; exit 1; fi
+mkdir -p "$base" && rm -rf "$base/$id" && cp -r "$pkg" "$base/$id"

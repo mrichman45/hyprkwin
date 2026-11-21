@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+# Test stand-in for KDE's kwriteconfig6: --file F [--group G]... --key K (VALUE | --delete). Escapes like KConfig.
+# minimal kwriteconfig6: --file F [--group G]... --key K (VALUE | --delete)
+import sys, os, re
+a = sys.argv[1:]; f = None; groups = []; key = None; delete = False; val = None; i = 0
+while i < len(a):
+    if a[i] == "--file": f = a[i+1]; i += 2
+    elif a[i] == "--group": groups.append(a[i+1]); i += 2
+    elif a[i] == "--key": key = a[i+1]; i += 2
+    elif a[i] == "--delete": delete = True; i += 1
+    else: val = a[i]; i += 1
+cfg = os.environ.get("XDG_CONFIG_HOME")
+path = f if os.path.isabs(f) else os.path.join(cfg, f)
+def esc(v): return v.replace("\\", "\\\\").replace("\t", "\\t").replace("\n", "\\n")
+header = "".join(f"[{g}]" for g in groups)
+lines = open(path).read().split("\n") if os.path.exists(path) else []
+out, cur, done, found_group = [], None, False, False
+for ln in lines:
+    if ln.startswith("["):
+        if cur == header and not done and not delete:
+            out.append(f"{key}={esc(val)}"); done = True
+        cur = ln; found_group |= (ln == header)
+        out.append(ln); continue
+    if cur == header and ln.split("=", 1)[0] == key:
+        if not delete: out.append(f"{key}={esc(val)}")
+        done = True; continue
+    out.append(ln)
+if cur == header and not done and not delete:
+    out.append(f"{key}={esc(val)}"); done = True
+if not done and not delete:
+    out += ["", header, f"{key}={esc(val)}"]
+open(path, "w").write("\n".join(out))
+

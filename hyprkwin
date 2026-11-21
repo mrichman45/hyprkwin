@@ -1,0 +1,660 @@
+#!/usr/bin/env python3
+"""
+hyprkwin — one switch for HyprKWin (Hyprland's tiling, keys and animations on KDE Plasma 6).
+
+    hyprkwin on       turn Hyprland mode on (saves your KDE settings first)
+    hyprkwin off      turn it off and put your KDE settings back exactly as they were
+    hyprkwin toggle   on <-> off
+    hyprkwin gaming-desktop [N|none|--show]   which desktop starts without tiling (asks if no number)
+    hyprkwin refresh  off then on again: re-applies everything (run after an update; Setup does it for you)
+    hyprkwin status   is it on?
+    hyprkwin gui      the control panel (what the "HyprKWin" app in your menu opens)
+    hyprkwin menu     the same control panel in the terminal
+    hyprkwin uninstall   remove HyprKWin and put KDE back as it was
+    hyprkwin cheatsheet   open the keybinding cheat sheet in your browser
+    hyprkwin check    keybinding clash report (same options as check-keybinds.py: --all --list --fix)
+
+Changes to shortcuts take effect after logging out and back in.
+Standard library only.
+"""
+import importlib.util
+import sys as _sys
+_sys.dont_write_bytecode = True
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+CFG = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+DATA = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
+STATE_DIR = os.path.join(CFG, "hyprkwin")
+STATE = os.path.join(STATE_DIR, "state.json")
+LEGACY_BACKUP = os.path.join(CFG, "hyprkwin-backup")       # from the old hyprland-feel.sh
+KWINRC = os.path.join(CFG, "kwinrc")
+SHORTCUTS = os.path.join(CFG, "kglobalshortcutsrc")
+
+
+# ------------------------------------------------------------------ helpers
+def load_checker():
+    for p in (os.path.join(HERE, "check-keybinds.py"), os.path.join(HERE, "..", "check-keybinds.py"),
+              os.path.join(DATA, "hyprkwin", "check-keybinds.py")):
+        if os.path.exists(p):
+            spec = importlib.util.spec_from_file_location("check_keybinds", p)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+    sys.exit("hyprkwin: can't find check-keybinds.py — reinstall HyprKWin.")
+
+
+K = load_checker()
+
+
+def have(cmd):
+    return shutil.which(cmd) is not None
+
+
+def read(path):
+    return K.read_kconfig(path) if os.path.exists(path) else {}
+
+
+def get(groups, group, key):
+    return groups.get(tuple(group), {}).get(key)
+
+
+def qdbus(*args):
+    tool = "qdbus6" if have("qdbus6") else ("qdbus" if have("qdbus") else None)
+    if not tool:
+        return None
+    r = subprocess.run([tool, *args], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def reconfigure():
+    if qdbus("org.kde.KWin", "/KWin", "reconfigure") is None and have("dbus-send"):
+        subprocess.run(["dbus-send", "--session", "--type=method_call", "--dest=org.kde.KWin", "/KWin",
+                        "org.kde.KWin.reconfigure"], capture_output=True)
+
+
+def notify(text):
+    if have("notify-send"):
+        subprocess.run(["notify-send", "-a", "HyprKWin", "-i", "view-grid", "HyprKWin", text], capture_output=True)
+    elif have("kdialog"):
+        subprocess.run(["kdialog", "--title", "HyprKWin", "--passivepopup", text, "6"], capture_output=True)
+
+
+def load_state():
+    if os.path.exists(STATE):
+        with open(STATE, encoding="utf-8") as f:
+            return json.load(f)
+    return {"on": False, "saved": []}
+
+
+def save_state(state):
+    os.makedirs(STATE_DIR, exist_ok=True)
+    tmp = STATE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=1, ensure_ascii=False)
+    os.replace(tmp, STATE)
+
+
+# ------------------------------------------------------------------ what "on" changes
+DIGIT_SHIFTED = {"1": "!", "2": "@", "3": "#", "4": "$", "5": "%", "6": "^", "7": "&", "8": "*", "9": "(", "0": ")"}
+
+# HyprKWin action -> (Hyprland's key, the script's default, description)   bind = SUPER, <key>, <dispatcher>
+HYPR_KEYS = [
+    ("focus-left", "Meta+Left", "Meta+Alt+H", "movefocus l"),
+    ("focus-right", "Meta+Right", "Meta+Alt+L", "movefocus r"),
+    ("focus-up", "Meta+Up", "Meta+Alt+K", "movefocus u"),
+    ("focus-down", "Meta+Down", "Meta+Alt+J", "movefocus d"),
+    ("move-left", "Meta+Shift+Left", "Meta+Alt+Shift+H", "movewindow l"),
+    ("move-right", "Meta+Shift+Right", "Meta+Alt+Shift+L", "movewindow r"),
+    ("move-up", "Meta+Shift+Up", "Meta+Alt+Shift+K", "movewindow u"),
+    ("move-down", "Meta+Shift+Down", "Meta+Alt+Shift+J", "movewindow d"),
+    ("killactive", "Meta+C", "Meta+Alt+Q", "killactive"),
+    ("togglefloating", "Meta+V", "Meta+Alt+V", "togglefloating"),
+    ("dwindle:togglesplit", "Meta+J", "Meta+Alt+E", "dwindle: togglesplit"),
+    ("pseudo", "Meta+P", "Meta+Alt+P", "pseudo (pseudotile)"),
+    ("fullscreen", "Meta+F", "Meta+Alt+F", "fullscreen 0"),
+    ("togglespecialworkspace", "Meta+S", "Meta+Alt+S", "togglespecialworkspace"),
+    ("movetoworkspace-special", "Meta+Shift+S", "Meta+Alt+Shift+S", "movetoworkspace special"),
+    ("toggle-tiling", "Meta+T", "Meta+Alt+T", "gaming mode: tiling off / on for this desktop"),
+    ("glossary", "Meta+Shift+G", "Meta+Shift+G", "keybinding glossary"),
+]
+
+# KDE shortcuts Hyprland's keys need: (group, action, default, label)
+FREE = [
+    (("kwin",), "Window Quick Tile Left", "Meta+Left", "Quick Tile Window to the Left"),
+    (("kwin",), "Window Quick Tile Right", "Meta+Right", "Quick Tile Window to the Right"),
+    (("kwin",), "Window Quick Tile Top", "Meta+Up", "Quick Tile Window to the Top"),
+    (("kwin",), "Window Quick Tile Bottom", "Meta+Down", "Quick Tile Window to the Bottom"),
+    (("kwin",), "Window to Next Screen", "Meta+Shift+Right", "Move Window to Next Screen"),
+    (("kwin",), "Window to Previous Screen", "Meta+Shift+Left", "Move Window to Previous Screen"),
+    (("plasmashell",), "show-on-mouse-pos", "Meta+V", "Show Clipboard Items at Mouse Position"),
+    (("plasmashell",), "manage activities", "Meta+Q", "Show Activity Switcher"),
+] + [(("plasmashell",), f"activate task manager entry {i}", f"Meta+{i % 10}", f"Activate Task Manager Entry {i}")
+     for i in range(1, 11)]
+
+
+def shortcut_value(active, default, label):
+    """Keep the default and label already in the file; replace only the active key(s)."""
+    def make(old):
+        if old is not None:
+            f = K.split_fields(old)
+            if len(f) >= 3:
+                return f"{active},{f[1]},{f[2]}"
+        return f"{active},{default},{label}"
+    return make
+
+
+def script_shortcuts():
+    """Every HyprKWin action and its default key, read from the installed script."""
+    for p in (os.path.join(DATA, "kwin", "scripts", "hyprkwin", "contents", "ui", "main.qml"),
+              os.path.join(HERE, "script", "contents", "ui", "main.qml"),
+              os.path.join(HERE, "..", "script", "contents", "ui", "main.qml")):
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as f:
+                q = f.read()
+            block = q[q.find("readonly property var shortcuts"):q.find("Instantiator")]
+            return re.findall(r'\["([^"]+)",\s*"([^"]*)",\s*"([^"]*)"\]', block)
+    return []
+
+
+def plan_on():
+    """-> list of (file, group, key, new_value or function(old) -> new_value)"""
+    p = []
+    kw = lambda g, k, v: p.append((KWINRC, (g,), k, v))
+    sc = lambda g, k, v: p.append((SHORTCUTS, g, k, v))
+
+    # KDE's own open/close animations would fight Hyprland's (old and new effect names)
+    for e in ("scale", "glide", "fade"):
+        kw("Plugins", f"{e}Enabled", "false")
+        kw("Plugins", f"kwin4_effect_{e}Enabled", "false")
+    kw("Plugins", "dwindletilingEnabled", "false")      # the early single-layout script
+    kw("Windows", "FocusPolicy", "FocusFollowsMouse")    # Hyprland: focus follows the mouse
+    kw("Desktops", "Number", "10")                       # Hyprland's default config: workspaces 1-10
+    kw("Desktops", "Rows", "1")
+    kw("Script-hyprkwin", "DwindlePreserveSplit", "true")
+    kw("Script-hyprkwin", "HideTitlebars", "true")
+    kw("Script-hyprkwin", "GapsIn", "5")
+    kw("Script-hyprkwin", "GapsOut", "20")
+
+    for group, action, default, label in FREE:
+        sc(group, action, shortcut_value("none", default, label))
+
+    hypr = {a: key for a, key, _, _ in HYPR_KEYS}
+    for action, key, default, text in HYPR_KEYS:
+        sc(("kwin",), "HyprKWin: " + action, shortcut_value(key, default, "HyprKWin: " + text))
+    # the script's other actions keep their Meta+Alt defaults; writing them now lets clashes be fixed today
+    for action, text, default in script_shortcuts():
+        if action not in hypr and default:
+            sc(("kwin",), "HyprKWin: " + action, shortcut_value(default, default, "HyprKWin: " + text))
+
+    for i in range(1, 11):
+        d = str(i % 10)
+        sc(("kwin",), f"Switch to Desktop {i}", shortcut_value(f"Meta+{d}", "none", f"Switch to Desktop {i}"))
+        # with Shift held KDE sees the symbol (Shift+1 = "!"): save both forms
+        sc(("kwin",), f"Window to Desktop {i}",
+           shortcut_value(f"Meta+{DIGIT_SHIFTED[d]}\tMeta+Shift+{d}", "none", f"Window to Desktop {i}"))
+
+    # SUPER+Q terminal, SUPER+R launcher (SUPER+E Dolphin is already KDE's default)
+    sc(("services", "org.kde.konsole.desktop"), "_launch", "Meta+Q\tCtrl+Alt+T")
+    sc(("services", "org.kde.krunner.desktop"), "_launch", "Meta+R\tAlt+Space\tAlt+F2\tSearch")
+    # Spectacle's region screenshot is Meta+Shift+S (Hyprland's "send to scratchpad"); keep Meta+Shift+Print
+    sc(("services", "org.kde.spectacle.desktop"), "RectangularRegionScreenShot", "Meta+Shift+Print")
+
+    overrides = ";".join(f"{a}={key}" for a, key, _, _ in HYPR_KEYS)
+    overrides += ";kde-workspace=Meta+1…9, 0;kde-sendto=Meta+Shift+1…9, 0;kde-terminal=Meta+Q;kde-launcher=Meta+R;"
+    kw("Script-hyprkwin", "KeyOverrides", overrides)
+    return p, {a: key for a, key, _, _ in HYPR_KEYS} | {"kde-workspace": "Meta+1"}
+
+
+# ------------------------------------------------------------------ gaming desktop
+# Stored as HyprKWin's own settings (TilingDefault = "only the listed desktops tile", TiledDesktops = the rest),
+# so it lasts across reboots, updates and Re-apply. None = every desktop tiles.
+MAX_DESKTOPS = 10
+
+
+def desktop_names():
+    d = read(KWINRC).get(("Desktops",), {})
+    count = max(MAX_DESKTOPS, int(d.get("Number", "0") or 0))
+    return {i: d.get(f"Name_{i}", "") for i in range(1, count + 1)}
+
+
+def get_gaming_desktop():
+    g = read(KWINRC).get(("Script-hyprkwin",), {})
+    mode = int(g.get("TilingDefault", "2"))                 # the script's default: listed desktops tile
+    if mode == 0:
+        return None
+    listed = g.get("TiledDesktops", "1, 3, 4, 5, 6, 7, 8, 9, 10")
+    tiled = {int(x) for x in re.findall(r"\d+", listed)}
+    for i in range(1, MAX_DESKTOPS + 1):
+        if i not in tiled:
+            return i
+    return None
+
+
+def restart_script():
+    """Reload HyprKWin so a settings change applies now (its code stays the same, so no log-out needed)."""
+    if qdbus("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting.isScriptLoaded", "hyprkwin") == "true":
+        qdbus("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting.unloadScript", "hyprkwin")
+        reconfigure()
+        qdbus("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting.start")
+
+
+def set_gaming_desktop(n):
+    if n is None:
+        K.kwrite(KWINRC, ("Script-hyprkwin",), "TilingDefault", "0")
+    else:
+        tiled = ", ".join(str(i) for i in range(1, max(desktop_names()) + 1) if i != n)
+        K.kwrite(KWINRC, ("Script-hyprkwin",), "TilingDefault", "2")
+        K.kwrite(KWINRC, ("Script-hyprkwin",), "TiledDesktops", tiled)
+    restart_script()
+
+
+def describe_desktop(n, names=None):
+    if n is None:
+        return "none (every desktop tiles)"
+    names = names or desktop_names()
+    return f"desktop {n}" + (f" ({names[n]})" if names.get(n) and names[n] != f"Desktop {n}" else "")
+
+
+def choose_gaming_desktop(gui):
+    """Ask which desktop is for gaming. Returns True if something was chosen."""
+    current = get_gaming_desktop()
+    names = desktop_names()
+    if gui and have("kdialog"):
+        items = ["0", "None: tile every desktop", "on" if current is None else "off"]
+        for i, name in names.items():
+            label = f"Desktop {i}" + (f": {name}" if name and name != f"Desktop {i}" else "")
+            items += [str(i), label, "on" if current == i else "off"]
+        r = subprocess.run(["kdialog", "--title", "HyprKWin: gaming desktop", "--radiolist",
+                            "Which desktop is your gaming desktop?\n\nIt always starts without tiling, so games keep "
+                            "their own size.\nSuper+T still switches any desktop until you log out.", *items],
+                           capture_output=True, text=True)
+        if r.returncode != 0 or not r.stdout.strip():
+            return False
+        pick = int(r.stdout.strip())
+    else:
+        print("\nWhich desktop is your gaming desktop? It always starts without tiling.")
+        print(f"  Now: {describe_desktop(current, names)}")
+        try:
+            a = input(f"  Desktop number (1-{max(names)}), 0 for none, Enter to keep: ").strip()
+        except EOFError:
+            return False
+        if not a:
+            return False
+        if not a.isdigit() or int(a) > max(names):
+            print("  Not a desktop number; nothing changed.")
+            return False
+        pick = int(a)
+    n = None if pick == 0 else pick
+    set_gaming_desktop(n)
+    msg = f"Gaming desktop: {describe_desktop(n, names)}."
+    print(msg)
+    notify(msg)
+    return True
+
+
+# ------------------------------------------------------------------ on / off
+def restore_legacy_backup():
+    """The old hyprland-feel.sh backed up whole files; put them back once before switching over."""
+    if not os.path.isdir(LEGACY_BACKUP) or os.path.exists(STATE):
+        return False
+    for name in ("kwinrc", "kglobalshortcutsrc"):
+        src = os.path.join(LEGACY_BACKUP, name)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(CFG, name))
+    shutil.rmtree(LEGACY_BACKUP, ignore_errors=True)
+    print("Restored the settings saved by the old hyprland-feel.sh before switching over.")
+    return True
+
+
+def turn_on():
+    if not have("kwriteconfig6"):
+        sys.exit("hyprkwin: kwriteconfig6 not found. Is this KDE Plasma 6?")
+    restore_legacy_backup()
+    state = load_state()
+    saved_keys = {(s["file"], tuple(s["group"]), s["key"]) for s in state["saved"]}
+
+    def write(path, group, key, new):
+        groups = read(path)
+        old = get(groups, group, key)
+        value = new(old) if callable(new) else new
+        if old == value:
+            return False
+        ident = (path, tuple(group), key)
+        if ident not in saved_keys:
+            state["saved"].append({"file": path, "group": list(group), "key": key, "old": old})
+            saved_keys.add(ident)
+        K.kwrite(path, group, key, value)
+        return True
+
+    plan, preset = plan_on()
+    for path, group, key, new in plan:
+        write(path, group, key, new)
+
+    # clear what still clashes: Hyprland's keys win, keys in keep.conf (and Meta+Alt+G) stay with KDE
+    binds = K.collect(read(SHORTCUTS))
+    fixed = K.plan_fix(binds, preset, K.protected_keys())
+    for group, action, value, drop, b in fixed:
+        write(SHORTCUTS, group, action, value)
+
+    # tiling + animations on
+    K.kwrite(KWINRC, ("Plugins",), "hyprkwinEnabled", "true")
+    K.kwrite(KWINRC, ("Plugins",), "hyprkwin_animationsEnabled", "true")
+    state["on"] = True
+    save_state(state)
+
+    reconfigure()
+    qdbus("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting.start")
+    qdbus("org.kde.KWin", "/Effects", "org.kde.kwin.Effects.loadEffect", "hyprkwin_animations")
+    for e in ("scale", "glide", "fade"):
+        qdbus("org.kde.KWin", "/Effects", "org.kde.kwin.Effects.unloadEffect", e)
+    return len(fixed)
+
+
+def turn_off():
+    state = load_state()
+    if restore_legacy_backup():
+        state = {"on": False, "saved": []}
+    for s in reversed(state["saved"]):
+        try:
+            K.kwrite(s["file"], s["group"], s["key"], s["old"])
+        except subprocess.CalledProcessError:
+            print(f"  couldn't restore {s['key']} in {os.path.basename(s['file'])}")
+    if have("kwriteconfig6"):
+        K.kwrite(KWINRC, ("Plugins",), "hyprkwinEnabled", "false")
+        K.kwrite(KWINRC, ("Plugins",), "hyprkwin_animationsEnabled", "false")
+    if os.path.exists(STATE):
+        os.remove(STATE)
+
+    reconfigure()
+    qdbus("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting.unloadScript", "hyprkwin")
+    qdbus("org.kde.KWin", "/Effects", "org.kde.kwin.Effects.unloadEffect", "hyprkwin_animations")
+
+
+def is_on():
+    if os.path.exists(STATE):
+        return load_state().get("on", False)
+    return os.path.isdir(LEGACY_BACKUP)          # old preset applied
+
+
+def ask_logout(gui):
+    msg = ("Log out and back in now so the keyboard shortcuts switch over.\n\n"
+           "Do it before changing anything else: KDE can otherwise put its old shortcuts back when you log out later.")
+    if gui and have("kdialog"):
+        r = subprocess.run(["kdialog", "--title", "HyprKWin", "--yes-label", "Log out now (recommended)", "--no-label", "Later",
+                            "--yesno", msg])
+        if r.returncode == 0:
+            qdbus("org.kde.Shutdown", "/Shutdown", "org.kde.Shutdown.logout")
+    else:
+        print(msg)
+
+
+def cmd_on(gui=False):
+    if is_on() and os.path.exists(STATE):
+        print("HyprKWin is already on.")
+        return
+    n = turn_on()
+    text = "Hyprland mode is on: tiling, Hyprland keys and animations." + (f" Freed {n} clashing KDE shortcut(s)." if n else "")
+    print(text)
+    notify(text + " Super+Shift+G shows the keys.")
+    ask_logout(gui)
+
+
+def cmd_off(gui=False):
+    if not is_on():
+        print("HyprKWin is already off.")
+        return
+    turn_off()
+    text = "Hyprland mode is off: your KDE settings and shortcuts are back."
+    print(text)
+    notify(text)
+    ask_logout(gui)
+
+
+def version():
+    for p in (os.path.join(DATA, "kwin", "scripts", "hyprkwin", "metadata.json"),
+              os.path.join(HERE, "script", "metadata.json")):
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as f:
+                return json.load(f)["KPlugin"].get("Version", "")
+    return ""
+
+
+def uninstaller():
+    for p in (os.path.join(DATA, "hyprkwin", "uninstall.sh"), os.path.join(HERE, "uninstall.sh")):
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def cheatsheet_path():
+    for p in (os.path.join(DATA, "hyprkwin", "cheatsheet.html"), os.path.join(HERE, "cheatsheet.html")):
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def open_cheatsheet():
+    p = cheatsheet_path()
+    if not p:
+        print("Cheat sheet not found; reinstall HyprKWin.")
+        return False
+    for opener in ("xdg-open", "kde-open", "kioclient"):
+        if have(opener):
+            cmd = [opener, "exec", p] if opener == "kioclient" else [opener, p]
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return True
+    print(f"Open this file in your browser: {p}")
+    return False
+
+
+def open_settings():
+    for cmd in (["systemsettings", "kcm_kwin_scripts"], ["kcmshell6", "kcm_kwin_scripts"]):
+        if have(cmd[0]):
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return True
+    return False
+
+
+def clash_report():
+    r = subprocess.run([sys.executable, os.path.realpath(__file__), "check", "--no-color"], capture_output=True, text=True)
+    return (r.stdout or r.stderr).strip() or "No report."
+
+
+def do_uninstall(gui):
+    path = uninstaller()
+    if not path:
+        msg = "Can't find the uninstaller. Reinstall HyprKWin, then uninstall it."
+        (subprocess.run(["kdialog", "--title", "HyprKWin", "--sorry", msg]) if gui and have("kdialog") else print(msg))
+        return
+    r = subprocess.run(["sh", path], capture_output=True, text=True)
+    out = (r.stdout + r.stderr).strip()
+    print(out)
+    if gui and have("kdialog"):
+        q = subprocess.run(["kdialog", "--title", "HyprKWin", "--yes-label", "Log out now", "--no-label", "Later",
+                            "--yesno", "HyprKWin is uninstalled and your KDE settings are back as they were.\n\n"
+                                       "Log out and back in once to finish."])
+        if q.returncode == 0:
+            qdbus("org.kde.Shutdown", "/Shutdown", "org.kde.Shutdown.logout")
+
+
+def cmd_refresh(gui=False):
+    """Off, then on again: re-applies every setting and shortcut cleanly (used after updates)."""
+    if not is_on():
+        print("Hyprland mode is off; nothing to refresh.")
+        return
+    turn_off()
+    n = turn_on()
+    print("Hyprland mode re-applied." + (f" Freed {n} clashing KDE shortcut(s)." if n else ""))
+    ask_logout(gui)
+
+
+def cmd_gui():
+    """The HyprKWin app: a small control panel."""
+    if not have("kdialog"):
+        return open_in_terminal(["menu"])
+    while True:
+        on = is_on()
+        state = "ON" if on else "OFF"
+        r = subprocess.run(["kdialog", "--title", f"HyprKWin {version()}", "--menu",
+                            f"Hyprland mode is {state}.\nTurning it off puts your KDE settings back exactly as they were.",
+                            "toggle", "Turn Hyprland mode off" if on else "Turn Hyprland mode on",
+                            "cheatsheet", "Show keybinding cheat sheet",
+                            "gaming", f"Choose gaming desktop… (now: {describe_desktop(get_gaming_desktop())})",
+                            "refresh", "Re-apply settings and keybindings (if keys stopped working)",
+                            "settings", "Tiling settings (gaps, layouts, rules)…",
+                            "check", "Check keybinding clashes",
+                            "uninstall", "Uninstall HyprKWin…"],
+                           capture_output=True, text=True)
+        choice = r.stdout.strip()
+        if r.returncode != 0 or not choice:
+            return
+        if choice == "toggle":
+            (cmd_off if on else cmd_on)(gui=True)
+            return
+        if choice == "cheatsheet":
+            open_cheatsheet()
+            return
+        if choice == "gaming":
+            choose_gaming_desktop(gui=True)
+            continue
+        if choice == "refresh":
+            if on:
+                cmd_refresh(gui=True)
+            else:
+                subprocess.run(["kdialog", "--title", "HyprKWin", "--msgbox", "Hyprland mode is off; turn it on first."])
+            return
+        if choice == "settings":
+            if not open_settings():
+                subprocess.run(["kdialog", "--title", "HyprKWin", "--msgbox",
+                                "Open System Settings → Window Management → KWin Scripts → HyprKWin (gear icon)."])
+            return
+        if choice == "check":
+            tmp = os.path.join(STATE_DIR, "clash-report.txt")
+            os.makedirs(STATE_DIR, exist_ok=True)
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(clash_report() + "\n")
+            subprocess.run(["kdialog", "--title", "HyprKWin: keybinding clashes", "--textbox", tmp, "760", "520"])
+            continue
+        if choice == "uninstall":
+            q = subprocess.run(["kdialog", "--title", "HyprKWin", "--warningyesno",
+                                "Uninstall HyprKWin?\n\nHyprland mode is turned off first, so your KDE settings and "
+                                "shortcuts are put back exactly as they were.",
+                                "--yes-label", "Uninstall", "--no-label", "Cancel"])
+            if q.returncode == 0:
+                do_uninstall(gui=True)
+                return
+
+
+def cmd_menu():
+    """The same control panel in a terminal (used when kdialog isn't installed)."""
+    while True:
+        on = is_on()
+        print(f"\nHyprKWin {version()} — Hyprland mode is {'ON' if on else 'OFF'}\n")
+        print(f"  1) Turn Hyprland mode {'off' if on else 'on'}")
+        print("  2) Tiling settings")
+        print("  3) Check keybinding clashes")
+        print("  4) Uninstall HyprKWin")
+        print("  5) Re-apply settings and keybindings (if keys stopped working)")
+        print(f"  6) Choose gaming desktop (now: {describe_desktop(get_gaming_desktop())})")
+        print("  7) Show keybinding cheat sheet")
+        print("  q) Quit")
+        try:
+            c = input("\nChoose: ").strip().lower()
+        except EOFError:
+            return
+        if c == "1":
+            (cmd_off if on else cmd_on)(gui=False)
+        elif c == "2":
+            if not open_settings():
+                print("Open System Settings → Window Management → KWin Scripts → HyprKWin (gear icon).")
+        elif c == "3":
+            print(clash_report())
+        elif c == "4":
+            if input("Uninstall HyprKWin and put KDE back as it was? [y/N] ").strip().lower().startswith("y"):
+                do_uninstall(gui=False)
+                return
+        elif c == "5":
+            cmd_refresh(gui=False)
+        elif c == "6":
+            choose_gaming_desktop(gui=False)
+        elif c == "7":
+            open_cheatsheet()
+        elif c in ("q", ""):
+            return
+
+
+TERMINALS = [["konsole", "-e"], ["kgx", "--"], ["gnome-terminal", "--"], ["alacritty", "-e"], ["kitty"],
+             ["foot"], ["wezterm", "start", "--"], ["xterm", "-e"]]
+
+
+def open_in_terminal(args):
+    """No dialogs available and no terminal attached: open one running the text version."""
+    if sys.stdin.isatty():
+        return cmd_menu() if args == ["menu"] else None
+    for t in TERMINALS:
+        if have(t[0]):
+            subprocess.Popen(t + [sys.executable, os.path.realpath(__file__)] + args, start_new_session=True)
+            return
+    notify("Open a terminal and run: hyprkwin menu")
+
+
+def main(argv):
+    cmd = argv[1] if len(argv) > 1 else "gui"
+    gui = "--gui" in argv
+    if cmd == "on":
+        cmd_on(gui=gui)
+    elif cmd == "off":
+        cmd_off(gui=gui)
+    elif cmd == "refresh":
+        cmd_refresh(gui=gui)
+    elif cmd == "gaming-desktop":
+        arg = next((a for a in argv[2:] if not a.startswith("--")), None)
+        if arg is None:
+            if "--show" in argv:
+                print(describe_desktop(get_gaming_desktop()))
+            else:
+                choose_gaming_desktop(gui=gui)
+        elif arg.lower() in ("none", "0", "off"):
+            set_gaming_desktop(None)
+            print("Gaming desktop: none (every desktop tiles).")
+        elif arg.isdigit() and 1 <= int(arg) <= max(desktop_names()):
+            set_gaming_desktop(int(arg))
+            print(f"Gaming desktop: {describe_desktop(int(arg))}.")
+        else:
+            print(f"Use a desktop number from 1 to {max(desktop_names())}, or 'none'.")
+            return 1
+    elif cmd == "toggle":
+        (cmd_off if is_on() else cmd_on)()
+    elif cmd == "status":
+        loaded = qdbus("org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting.isScriptLoaded", "hyprkwin")
+        print(f"Hyprland mode: {'on' if is_on() else 'off'}" + (f"   (tiling script running: {loaded})" if loaded else ""))
+    elif cmd == "gui":
+        cmd_gui()
+    elif cmd == "menu":
+        cmd_menu()
+    elif cmd == "uninstall":
+        if gui:
+            do_uninstall(gui=True)
+        elif input("Uninstall HyprKWin and put KDE back as it was? [y/N] ").strip().lower().startswith("y"):
+            do_uninstall(gui=False)
+    elif cmd == "cheatsheet":
+        open_cheatsheet()
+    elif cmd == "version":
+        print(version())
+    elif cmd == "check":
+        sys.argv = ["check-keybinds"] + argv[2:]
+        return K.main()
+    else:
+        print(__doc__.strip())
+        return 0 if cmd in ("-h", "--help", "help") else 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

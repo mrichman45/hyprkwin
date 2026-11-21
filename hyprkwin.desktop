@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=HyprKWin
+GenericName=Hyprland mode
+Comment=Hyprland mode on or off, tiling settings, and uninstall
+Exec=@BIN@/hyprkwin gui
+Icon=view-grid
+Terminal=false
+Categories=Settings;DesktopSettings;Qt;KDE;
+Keywords=hyprland;tiling;window manager;keybindings;

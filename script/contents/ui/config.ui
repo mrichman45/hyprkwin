@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HyprKWinConfig</class>
+ <widget class="QWidget" name="HyprKWinConfig">
+  <layout class="QVBoxLayout" name="rootLayout">
+   <item><widget class="QLabel" name="introLabel"><property name="text"><string>Hyprland options, same names and defaults. After saving, changes apply right away; if not, turn the script off and on.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+   <item>
+    <widget class="QTabWidget" name="tabs">
+     <widget class="QWidget" name="tabGeneral">
+      <attribute name="title"><string>General</string></attribute>
+      <layout class="QFormLayout" name="formGeneral">
+       <item row="0" column="0"><widget class="QLabel" name="labelLayout"><property name="text"><string>Default layout (general:layout)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QComboBox" name="kcfg_Layout"><item><property name="text"><string>dwindle</string></property></item><item><property name="text"><string>master</string></property></item><item><property name="text"><string>scrolling</string></property></item><item><property name="text"><string>monocle</string></property></item></widget></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelTilingDefault"><property name="text"><string>Desktops that start tiled (Super+T switches any desktop until you log out)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="1" column="1"><widget class="QComboBox" name="kcfg_TilingDefault"><item><property name="text"><string>all desktops</string></property></item><item><property name="text"><string>none (normal KDE until toggled)</string></property></item><item><property name="text"><string>only the ones listed below</string></property></item></widget></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelTiledDesktops"><property name="text"><string>Desktop numbers that tile; the rest start in gaming mode (default: desktop 2 is for gaming)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="2" column="1"><widget class="QLineEdit" name="kcfg_TiledDesktops"/></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelGapsIn"><property name="text"><string>Gaps between windows (general:gaps_in)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="3" column="1"><widget class="QSpinBox" name="kcfg_GapsIn"><property name="minimum"><number>0</number></property><property name="maximum"><number>200</number></property></widget></item>
+       <item row="4" column="0"><widget class="QLabel" name="labelGapsOut"><property name="text"><string>Gaps to screen edges (general:gaps_out)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="4" column="1"><widget class="QSpinBox" name="kcfg_GapsOut"><property name="minimum"><number>0</number></property><property name="maximum"><number>200</number></property></widget></item>
+       <item row="5" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_SmartGaps"><property name="text"><string>No gaps when only one window is tiled</string></property></widget></item>
+       <item row="6" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_HideTitlebars"><property name="text"><string>Hide titlebars on tiled windows (Hyprland has none)</string></property></widget></item>
+       <item row="7" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_FloatAbove"><property name="text"><string>Keep floating windows above tiled ones</string></property></widget></item>
+       <item row="8" column="0"><widget class="QLabel" name="labelFocusPreferredMethod"><property name="text"><string>Directional focus picks (binds:focus_preferred_method)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="8" column="1"><widget class="QComboBox" name="kcfg_FocusPreferredMethod"><item><property name="text"><string>most recently focused</string></property></item><item><property name="text"><string>longest shared edge</string></property></item></widget></item>
+       <item row="9" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MonitorFallback"><property name="text"><string>Move/focus to the next monitor at the edge (binds:window_direction_monitor_fallback)</string></property></widget></item>
+       <item row="10" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_NoFocusFallback"><property name="text"><string>Don&#x27;t wrap focus (general:no_focus_fallback)</string></property></widget></item>
+       <item row="11" column="0"><widget class="QLabel" name="labelResizeStep"><property name="text"><string>Keyboard resize/move step in pixels</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="11" column="1"><widget class="QSpinBox" name="kcfg_ResizeStep"><property name="minimum"><number>5</number></property><property name="maximum"><number>500</number></property></widget></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabRules">
+      <attribute name="title"><string>Rules</string></attribute>
+      <layout class="QFormLayout" name="formRules">
+       <item row="0" column="0"><widget class="QLabel" name="labelFloatClasses"><property name="text"><string>Always float these window classes (comma separated)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QLineEdit" name="kcfg_FloatClasses"/></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelIgnoreClasses"><property name="text"><string>Never touch these window classes (comma separated)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="1" column="1"><widget class="QLineEdit" name="kcfg_IgnoreClasses"/></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabDecoration">
+      <attribute name="title"><string>Decoration</string></attribute>
+      <layout class="QFormLayout" name="formDecoration">
+       <item row="0" column="0"><widget class="QLabel" name="labelActiveOpacity"><property name="text"><string>Active window opacity (decoration:active_opacity)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QDoubleSpinBox" name="kcfg_ActiveOpacity"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>1.0</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelInactiveOpacity"><property name="text"><string>Inactive window opacity (decoration:inactive_opacity)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="1" column="1"><widget class="QDoubleSpinBox" name="kcfg_InactiveOpacity"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>1.0</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelFullscreenOpacity"><property name="text"><string>Fullscreen window opacity (decoration:fullscreen_opacity)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="2" column="1"><widget class="QDoubleSpinBox" name="kcfg_FullscreenOpacity"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>1.0</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabSpecialworkspace">
+      <attribute name="title"><string>Special workspace</string></attribute>
+      <layout class="QFormLayout" name="formSpecialworkspace">
+       <item row="0" column="0"><widget class="QLabel" name="labelSpecialScaleFactor"><property name="text"><string>Special workspace size (special_scale_factor)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QDoubleSpinBox" name="kcfg_SpecialScaleFactor"><property name="minimum"><double>0.1</double></property><property name="maximum"><double>1.0</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabDwindle">
+      <attribute name="title"><string>Dwindle</string></attribute>
+      <layout class="QFormLayout" name="formDwindle">
+       <item row="0" column="0"><widget class="QLabel" name="labelDwindleForceSplit"><property name="text"><string>New window side (force_split)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QComboBox" name="kcfg_DwindleForceSplit"><item><property name="text"><string>follow mouse</string></property></item><item><property name="text"><string>always left/top</string></property></item><item><property name="text"><string>always right/bottom</string></property></item></widget></item>
+       <item row="1" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindlePreserveSplit"><property name="text"><string>Keep split direction (preserve_split) — needed for togglesplit to stick</string></property></widget></item>
+       <item row="2" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindleSmartSplit"><property name="text"><string>Split by cursor position on the window (smart_split)</string></property></widget></item>
+       <item row="3" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindleSmartResizing"><property name="text"><string>Resize the edge nearest the cursor (smart_resizing)</string></property></widget></item>
+       <item row="4" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindlePermanentDirectionOverride"><property name="text"><string>Preselect stays until changed (permanent_direction_override)</string></property></widget></item>
+       <item row="5" column="0"><widget class="QLabel" name="labelDwindleSplitWidthMultiplier"><property name="text"><string>Split width multiplier (split_width_multiplier)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="5" column="1"><widget class="QDoubleSpinBox" name="kcfg_DwindleSplitWidthMultiplier"><property name="minimum"><double>0.1</double></property><property name="maximum"><double>4.0</double></property><property name="singleStep"><double>0.1</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="6" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindleUseActiveForSplits"><property name="text"><string>Split the active window, not the one under the mouse (use_active_for_splits)</string></property></widget></item>
+       <item row="7" column="0"><widget class="QLabel" name="labelDwindleDefaultSplitRatio"><property name="text"><string>Default split ratio, 1.0 = half (default_split_ratio)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="7" column="1"><widget class="QDoubleSpinBox" name="kcfg_DwindleDefaultSplitRatio"><property name="minimum"><double>0.1</double></property><property name="maximum"><double>1.9</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="8" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindleSplitBias"><property name="text"><string>Give the bigger half to the new window (split_bias)</string></property></widget></item>
+       <item row="9" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_DwindlePreciseMouseMove"><property name="text"><string>Drop dragged windows by exact cursor side (precise_mouse_move)</string></property></widget></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabMaster">
+      <attribute name="title"><string>Master</string></attribute>
+      <layout class="QFormLayout" name="formMaster">
+       <item row="0" column="0"><widget class="QLabel" name="labelMasterMfact"><property name="text"><string>Master area size (mfact)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QDoubleSpinBox" name="kcfg_MasterMfact"><property name="minimum"><double>0.05</double></property><property name="maximum"><double>0.95</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelMasterNewStatus"><property name="text"><string>New windows become (new_status)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="1" column="1"><widget class="QComboBox" name="kcfg_MasterNewStatus"><item><property name="text"><string>master</string></property></item><item><property name="text"><string>slave</string></property></item><item><property name="text"><string>inherit</string></property></item></widget></item>
+       <item row="2" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterNewOnTop"><property name="text"><string>New windows go on top of the stack (new_on_top)</string></property></widget></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelMasterNewOnActive"><property name="text"><string>Place new windows next to the active one (new_on_active)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="3" column="1"><widget class="QComboBox" name="kcfg_MasterNewOnActive"><item><property name="text"><string>none</string></property></item><item><property name="text"><string>before</string></property></item><item><property name="text"><string>after</string></property></item></widget></item>
+       <item row="4" column="0"><widget class="QLabel" name="labelMasterOrientation"><property name="text"><string>Master side (orientation)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="4" column="1"><widget class="QComboBox" name="kcfg_MasterOrientation"><item><property name="text"><string>left</string></property></item><item><property name="text"><string>top</string></property></item><item><property name="text"><string>right</string></property></item><item><property name="text"><string>bottom</string></property></item><item><property name="text"><string>center</string></property></item></widget></item>
+       <item row="5" column="0"><widget class="QLabel" name="labelMasterSlaveCountForCenter"><property name="text"><string>Stack windows needed for center master (slave_count_for_center_master)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="5" column="1"><widget class="QSpinBox" name="kcfg_MasterSlaveCountForCenter"><property name="minimum"><number>0</number></property><property name="maximum"><number>20</number></property></widget></item>
+       <item row="6" column="0"><widget class="QLabel" name="labelMasterCenterFallback"><property name="text"><string>Center master fallback side (center_master_fallback)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="6" column="1"><widget class="QComboBox" name="kcfg_MasterCenterFallback"><item><property name="text"><string>left</string></property></item><item><property name="text"><string>top</string></property></item><item><property name="text"><string>right</string></property></item><item><property name="text"><string>bottom</string></property></item></widget></item>
+       <item row="7" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterCenterIgnoresReserved"><property name="text"><string>Centered master ignores panels (center_ignores_reserved)</string></property></widget></item>
+       <item row="8" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterSmartResizing"><property name="text"><string>Smart resizing (smart_resizing)</string></property></widget></item>
+       <item row="9" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterDropAtCursor"><property name="text"><string>Drop dragged windows at the cursor (drop_at_cursor)</string></property></widget></item>
+       <item row="10" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterAllowSmallSplit"><property name="text"><string>Allow more masters than stack windows (allow_small_split)</string></property></widget></item>
+       <item row="11" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterAlwaysKeepPosition"><property name="text"><string>Single window keeps master size (always_keep_position)</string></property></widget></item>
+       <item row="12" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_MasterFocusMasterOnClose"><property name="text"><string>Focus master when a window closes (focus_master_on_close)</string></property></widget></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabScrolling">
+      <attribute name="title"><string>Scrolling</string></attribute>
+      <layout class="QFormLayout" name="formScrolling">
+       <item row="0" column="0"><widget class="QLabel" name="labelScrollingColumnWidth"><property name="text"><string>New column width (column_width)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="0" column="1"><widget class="QDoubleSpinBox" name="kcfg_ScrollingColumnWidth"><property name="minimum"><double>0.05</double></property><property name="maximum"><double>1.0</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelScrollingExplicitColumnWidths"><property name="text"><string>Widths for colresize ±conf (explicit_column_widths)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="1" column="1"><widget class="QLineEdit" name="kcfg_ScrollingExplicitColumnWidths"/></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelScrollingDirection"><property name="text"><string>New columns go (direction)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="2" column="1"><widget class="QComboBox" name="kcfg_ScrollingDirection"><item><property name="text"><string>right</string></property></item><item><property name="text"><string>left</string></property></item><item><property name="text"><string>down</string></property></item><item><property name="text"><string>up</string></property></item></widget></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelScrollingFocusFitMethod"><property name="text"><string>Bring focused column into view by (focus_fit_method)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="3" column="1"><widget class="QComboBox" name="kcfg_ScrollingFocusFitMethod"><item><property name="text"><string>centering it</string></property></item><item><property name="text"><string>fitting it</string></property></item><item><property name="text"><string>clamped centering</string></property></item></widget></item>
+       <item row="4" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_ScrollingFollowFocus"><property name="text"><string>Scroll to the focused window (follow_focus)</string></property></widget></item>
+       <item row="5" column="0"><widget class="QLabel" name="labelScrollingFollowMinVisible"><property name="text"><string>Only follow if this much is visible (follow_min_visible)</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+       <item row="5" column="1"><widget class="QDoubleSpinBox" name="kcfg_ScrollingFollowMinVisible"><property name="minimum"><double>0.0</double></property><property name="maximum"><double>1.0</double></property><property name="singleStep"><double>0.05</double></property><property name="decimals"><number>3</number></property></widget></item>
+       <item row="6" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_ScrollingFullscreenOnOneColumn"><property name="text"><string>Single column fills the screen (fullscreen_on_one_column)</string></property></widget></item>
+       <item row="7" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_ScrollingWrapFocus"><property name="text"><string>Focus wraps around (wrap_focus)</string></property></widget></item>
+       <item row="8" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_ScrollingWrapSwapcol"><property name="text"><string>swapcol wraps around (wrap_swapcol)</string></property></widget></item>
+       <item row="9" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_ScrollingHideOffscreen"><property name="text"><string>Park off-screen columns out of sight (needed with several monitors)</string></property></widget></item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

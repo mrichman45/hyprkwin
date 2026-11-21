@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HyprKWinAnimationsConfig</class>
+ <widget class="QWidget" name="HyprKWinAnimationsConfig">
+  <layout class="QFormLayout" name="form">
+   <item row="0" column="0"><widget class="QLabel" name="lOpenStyle"><property name="text"><string>Open animation (windows)</string></property></widget></item>
+   <item row="0" column="1"><widget class="QComboBox" name="kcfg_OpenStyle"><item><property name="text"><string>Pop in (Hyprland default)</string></property></item><item><property name="text"><string>Slide from nearest edge</string></property></item><item><property name="text"><string>Fade</string></property></item><item><property name="text"><string>None</string></property></item></widget></item>
+   <item row="1" column="0"><widget class="QLabel" name="lCloseStyle"><property name="text"><string>Close animation (windowsOut)</string></property></widget></item>
+   <item row="1" column="1"><widget class="QComboBox" name="kcfg_CloseStyle"><item><property name="text"><string>Pop in (Hyprland default)</string></property></item><item><property name="text"><string>Slide from nearest edge</string></property></item><item><property name="text"><string>Fade</string></property></item><item><property name="text"><string>None</string></property></item></widget></item>
+   <item row="2" column="0"><widget class="QLabel" name="lPopinPercent"><property name="text"><string>Pop-in start size, % (popin)</string></property></widget></item>
+   <item row="2" column="1"><widget class="QSpinBox" name="kcfg_PopinPercent"><property name="minimum"><number>10</number></property><property name="maximum"><number>100</number></property></widget></item>
+   <item row="3" column="0"><widget class="QLabel" name="lOpenDuration"><property name="text"><string>Open duration, ms</string></property></widget></item>
+   <item row="3" column="1"><widget class="QSpinBox" name="kcfg_OpenDuration"><property name="minimum"><number>0</number></property><property name="maximum"><number>2000</number></property></widget></item>
+   <item row="4" column="0"><widget class="QLabel" name="lCloseDuration"><property name="text"><string>Close duration, ms</string></property></widget></item>
+   <item row="4" column="1"><widget class="QSpinBox" name="kcfg_CloseDuration"><property name="minimum"><number>0</number></property><property name="maximum"><number>2000</number></property></widget></item>
+   <item row="5" column="0" colspan="2"><widget class="QCheckBox" name="kcfg_AnimateMove"><property name="text"><string>Animate tiles moving to new spots (windowsMove)</string></property></widget></item>
+   <item row="6" column="0"><widget class="QLabel" name="lMoveDuration"><property name="text"><string>Move duration, ms</string></property></widget></item>
+   <item row="6" column="1"><widget class="QSpinBox" name="kcfg_MoveDuration"><property name="minimum"><number>0</number></property><property name="maximum"><number>2000</number></property></widget></item>
+   <item row="7" column="0"><widget class="QLabel" name="lCurve"><property name="text"><string>Curve</string></property></widget></item>
+   <item row="7" column="1"><widget class="QComboBox" name="kcfg_Curve"><item><property name="text"><string>Overshoot (like Hyprland&#x27;s default bezier)</string></property></item><item><property name="text"><string>Ease out expo</string></property></item><item><property name="text"><string>Ease out cubic</string></property></item><item><property name="text"><string>Ease in-out cubic</string></property></item><item><property name="text"><string>Linear</string></property></item></widget></item>
+   <item row="8" column="0" colspan="2"><widget class="QLabel" name="note"><property name="text"><string>Turn off KWin&#x27;s Scale, Glide and Fade effects while this is on.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

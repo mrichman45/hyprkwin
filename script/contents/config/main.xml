@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="">
+    <entry name="Layout" type="Int">
+      <label>Default layout (general:layout)</label>
+      <default>0</default>
+    </entry>
+    <entry name="TilingDefault" type="Int">
+      <label>Desktops that start tiled (Super+T switches any desktop until you log out)</label>
+      <default>2</default>
+    </entry>
+    <entry name="TiledDesktops" type="String">
+      <label>Desktop numbers that tile; the rest start in gaming mode (default: desktop 2 is for gaming)</label>
+      <default>1, 3, 4, 5, 6, 7, 8, 9, 10</default>
+    </entry>
+    <entry name="GapsIn" type="Int">
+      <label>Gaps between windows (general:gaps_in)</label>
+      <default>5</default>
+    </entry>
+    <entry name="GapsOut" type="Int">
+      <label>Gaps to screen edges (general:gaps_out)</label>
+      <default>20</default>
+    </entry>
+    <entry name="SmartGaps" type="Bool">
+      <label>No gaps when only one window is tiled</label>
+      <default>false</default>
+    </entry>
+    <entry name="HideTitlebars" type="Bool">
+      <label>Hide titlebars on tiled windows (Hyprland has none)</label>
+      <default>false</default>
+    </entry>
+    <entry name="FloatAbove" type="Bool">
+      <label>Keep floating windows above tiled ones</label>
+      <default>true</default>
+    </entry>
+    <entry name="FocusPreferredMethod" type="Int">
+      <label>Directional focus picks (binds:focus_preferred_method)</label>
+      <default>0</default>
+    </entry>
+    <entry name="MonitorFallback" type="Bool">
+      <label>Move/focus to the next monitor at the edge (binds:window_direction_monitor_fallback)</label>
+      <default>true</default>
+    </entry>
+    <entry name="NoFocusFallback" type="Bool">
+      <label>Don&#x27;t wrap focus (general:no_focus_fallback)</label>
+      <default>false</default>
+    </entry>
+    <entry name="ResizeStep" type="Int">
+      <label>Keyboard resize/move step in pixels</label>
+      <default>40</default>
+    </entry>
+    <entry name="FloatClasses" type="String">
+      <label>Always float these window classes (comma separated)</label>
+      <default>org.kde.kcalc, pavucontrol, org.pulseaudio.pavucontrol, nm-connection-editor, blueman-manager</default>
+    </entry>
+    <entry name="IgnoreClasses" type="String">
+      <label>Never touch these window classes (comma separated)</label>
+      <default></default>
+    </entry>
+    <entry name="ActiveOpacity" type="Double">
+      <label>Active window opacity (decoration:active_opacity)</label>
+      <default>1.0</default>
+    </entry>
+    <entry name="InactiveOpacity" type="Double">
+      <label>Inactive window opacity (decoration:inactive_opacity)</label>
+      <default>1.0</default>
+    </entry>
+    <entry name="FullscreenOpacity" type="Double">
+      <label>Fullscreen window opacity (decoration:fullscreen_opacity)</label>
+      <default>1.0</default>
+    </entry>
+    <entry name="SpecialScaleFactor" type="Double">
+      <label>Special workspace size (special_scale_factor)</label>
+      <default>0.9</default>
+    </entry>
+    <entry name="DwindleForceSplit" type="Int">
+      <label>New window side (force_split)</label>
+      <default>0</default>
+    </entry>
+    <entry name="DwindlePreserveSplit" type="Bool">
+      <label>Keep split direction (preserve_split) — needed for togglesplit to stick</label>
+      <default>false</default>
+    </entry>
+    <entry name="DwindleSmartSplit" type="Bool">
+      <label>Split by cursor position on the window (smart_split)</label>
+      <default>false</default>
+    </entry>
+    <entry name="DwindleSmartResizing" type="Bool">
+      <label>Resize the edge nearest the cursor (smart_resizing)</label>
+      <default>true</default>
+    </entry>
+    <entry name="DwindlePermanentDirectionOverride" type="Bool">
+      <label>Preselect stays until changed (permanent_direction_override)</label>
+      <default>false</default>
+    </entry>
+    <entry name="DwindleSplitWidthMultiplier" type="Double">
+      <label>Split width multiplier (split_width_multiplier)</label>
+      <default>1.0</default>
+    </entry>
+    <entry name="DwindleUseActiveForSplits" type="Bool">
+      <label>Split the active window, not the one under the mouse (use_active_for_splits)</label>
+      <default>true</default>
+    </entry>
+    <entry name="DwindleDefaultSplitRatio" type="Double">
+      <label>Default split ratio, 1.0 = half (default_split_ratio)</label>
+      <default>1.0</default>
+    </entry>
+    <entry name="DwindleSplitBias" type="Bool">
+      <label>Give the bigger half to the new window (split_bias)</label>
+      <default>false</default>
+    </entry>
+    <entry name="DwindlePreciseMouseMove" type="Bool">
+      <label>Drop dragged windows by exact cursor side (precise_mouse_move)</label>
+      <default>false</default>
+    </entry>
+    <entry name="MasterMfact" type="Double">
+      <label>Master area size (mfact)</label>
+      <default>0.55</default>
+    </entry>
+    <entry name="MasterNewStatus" type="Int">
+      <label>New windows become (new_status)</label>
+      <default>1</default>
+    </entry>
+    <entry name="MasterNewOnTop" type="Bool">
+      <label>New windows go on top of the stack (new_on_top)</label>
+      <default>false</default>
+    </entry>
+    <entry name="MasterNewOnActive" type="Int">
+      <label>Place new windows next to the active one (new_on_active)</label>
+      <default>0</default>
+    </entry>
+    <entry name="MasterOrientation" type="Int">
+      <label>Master side (orientation)</label>
+      <default>0</default>
+    </entry>
+    <entry name="MasterSlaveCountForCenter" type="Int">
+      <label>Stack windows needed for center master (slave_count_for_center_master)</label>
+      <default>2</default>
+    </entry>
+    <entry name="MasterCenterFallback" type="Int">
+      <label>Center master fallback side (center_master_fallback)</label>
+      <default>0</default>
+    </entry>
+    <entry name="MasterCenterIgnoresReserved" type="Bool">
+      <label>Centered master ignores panels (center_ignores_reserved)</label>
+      <default>false</default>
+    </entry>
+    <entry name="MasterSmartResizing" type="Bool">
+      <label>Smart resizing (smart_resizing)</label>
+      <default>true</default>
+    </entry>
+    <entry name="MasterDropAtCursor" type="Bool">
+      <label>Drop dragged windows at the cursor (drop_at_cursor)</label>
+      <default>true</default>
+    </entry>
+    <entry name="MasterAllowSmallSplit" type="Bool">
+      <label>Allow more masters than stack windows (allow_small_split)</label>
+      <default>false</default>
+    </entry>
+    <entry name="MasterAlwaysKeepPosition" type="Bool">
+      <label>Single window keeps master size (always_keep_position)</label>
+      <default>false</default>
+    </entry>
+    <entry name="MasterFocusMasterOnClose" type="Bool">
+      <label>Focus master when a window closes (focus_master_on_close)</label>
+      <default>false</default>
+    </entry>
+    <entry name="ScrollingColumnWidth" type="Double">
+      <label>New column width (column_width)</label>
+      <default>0.5</default>
+    </entry>
+    <entry name="ScrollingExplicitColumnWidths" type="String">
+      <label>Widths for colresize ±conf (explicit_column_widths)</label>
+      <default>0.333, 0.5, 0.667, 1.0</default>
+    </entry>
+    <entry name="ScrollingDirection" type="Int">
+      <label>New columns go (direction)</label>
+      <default>0</default>
+    </entry>
+    <entry name="ScrollingFocusFitMethod" type="Int">
+      <label>Bring focused column into view by (focus_fit_method)</label>
+      <default>0</default>
+    </entry>
+    <entry name="ScrollingFollowFocus" type="Bool">
+      <label>Scroll to the focused window (follow_focus)</label>
+      <default>true</default>
+    </entry>
+    <entry name="ScrollingFollowMinVisible" type="Double">
+      <label>Only follow if this much is visible (follow_min_visible)</label>
+      <default>0.4</default>
+    </entry>
+    <entry name="ScrollingFullscreenOnOneColumn" type="Bool">
+      <label>Single column fills the screen (fullscreen_on_one_column)</label>
+      <default>true</default>
+    </entry>
+    <entry name="ScrollingWrapFocus" type="Bool">
+      <label>Focus wraps around (wrap_focus)</label>
+      <default>true</default>
+    </entry>
+    <entry name="ScrollingWrapSwapcol" type="Bool">
+      <label>swapcol wraps around (wrap_swapcol)</label>
+      <default>true</default>
+    </entry>
+    <entry name="ScrollingHideOffscreen" type="Bool">
+      <label>Park off-screen columns out of sight (needed with several monitors)</label>
+      <default>true</default>
+    </entry>
+  </group>
+</kcfg>

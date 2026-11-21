@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Layout tests (mock KWin)
+        run: node --test tests/*.test.js
+
+      - name: Shortcut tools, on/off switch and Setup (stand-in KDE tools)
+        run: python3 -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Settings page matches the script's defaults
+        run: |
+          python3 tools/gen_config.py script --check
+          git diff --exit-code -- script/contents/config script/contents/ui/config.ui
+
+      - name: Shell scripts parse
+        run: for f in install.sh uninstall.sh tools/build-setup.sh dist/HyprKWin-Setup.sh; do sh -n "$f"; done
