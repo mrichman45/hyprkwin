@@ -170,8 +170,8 @@ python3 tools/gen_config.py script --check             # settings page matches t
 ```
 
 The tests run without KDE: `tests/harness.js` fakes KWin's scripting API, and `tests/stubs/` has stand-ins for
-`kwriteconfig6`, `kpackagetool6` and `qdbus6`. GitHub runs them on every push. Pushing a tag like `v1.2` builds
-`HyprKWin-Setup.sh` and attaches it to a release.
+`kwriteconfig6`, `kpackagetool6` and `qdbus6`. GitHub runs them on every push. Publishing a release (Releases → Draft a new release → tag `v1.2`
+→ Publish) builds `HyprKWin-Setup.sh` and attaches it to that release.
 
 After changing an option in `tools/gen_config.py`, run `python3 tools/gen_config.py script` to regenerate the settings page.
 

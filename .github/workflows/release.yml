@@ -1,7 +1,11 @@
 name: Release
 
-# Push a tag like v1.2 and this builds HyprKWin-Setup.sh and attaches it to a GitHub release.
+# Builds HyprKWin-Setup.sh and attaches it to a GitHub release. Either:
+#   - on GitHub: Releases -> Draft a new release -> new tag "v1.2" -> Publish, or
+#   - from git:  git tag v1.2 && git push origin v1.2
 on:
+  release:
+    types: [published]
   push:
     tags: ["v*"]
   workflow_dispatch:
@@ -31,6 +35,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/HyprKWin-Setup.sh
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           generate_release_notes: true
           body: |
             **Install:** download `HyprKWin-Setup.sh`, then double-click it (choose "Execute"), or run `sh HyprKWin-Setup.sh`.
